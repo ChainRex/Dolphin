@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAccount, useConnect, useContractWrite, useWaitForTransaction } from 'wagmi';
-import { injected } from 'wagmi/connectors';
+import { InjectedConnector } from 'wagmi/connectors/injected';
 import {
     Box,
     Button,
@@ -16,7 +16,7 @@ import { BOT_NFT_ADDRESS, BOT_NFT_ABI } from '../config/web3';
 
 export const CreateBot: React.FC = () => {
     const { address, isConnected } = useAccount();
-    const { connect } = useConnect({ connector: injected() });
+    const { connect } = useConnect({ connector: new InjectedConnector() });
     const [name, setName] = useState('');
     const [url, setUrl] = useState('');
     const [description, setDescription] = useState('');
@@ -26,6 +26,7 @@ export const CreateBot: React.FC = () => {
         address: BOT_NFT_ADDRESS,
         abi: BOT_NFT_ABI,
         functionName: 'createBot',
+        mode: 'recklesslyUnprepared'
     });
 
     const { isLoading, isSuccess } = useWaitForTransaction({
@@ -62,7 +63,7 @@ export const CreateBot: React.FC = () => {
 
         try {
             write({
-                args: [name, url, description],
+                recklesslySetUnpreparedArgs: [name, url, description],
             });
         } catch (error: any) {
             toast({
