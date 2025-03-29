@@ -1,0 +1,10 @@
+{
+  "network": "bscTestnet",
+  "timestamp": "2025-03-29T07:33:24.957Z",
+  "deployer": "0x560c520553bB1Bb5De0FC54AB7EdDc5f8eEa3033",
+  "contracts": {
+    "BotNFT": "0x45ea55087F7CD26273a631E0eD23F90E6BC683f5",
+    "MCPServerManager": "0x900C0B558F08F945C58DB139eE030c86538Bb61D",
+    "AgentManager": "0xB0C05112c3801086cE506D1B970B614772AcE409"
+  }
+}

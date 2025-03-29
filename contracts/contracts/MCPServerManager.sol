@@ -179,7 +179,7 @@ contract MCPServerManager is Ownable {
             string memory appId,
             uint256 fee,
             address author,
-            bool isEnabled,
+            bool serverEnabled,
             string memory mcpServerType
         )
     {

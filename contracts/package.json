@@ -6,7 +6,16 @@
     "test": "test"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "hardhat test",
+    "compile": "hardhat compile",
+    "clean": "hardhat clean",
+    "node": "hardhat node",
+    "coverage": "hardhat coverage",
+    "deploy:localhost": "hardhat run scripts/deploy.ts --network localhost",
+    "deploy:bsc-testnet": "hardhat run scripts/deploy-bsc-testnet.ts --network bscTestnet",
+    "deploy:bsc": "hardhat run scripts/deploy-bsc.ts --network bsc",
+    "verify:bsc-testnet": "hardhat run scripts/verify.ts --network bscTestnet",
+    "verify:bsc": "hardhat run scripts/verify.ts --network bsc"
   },
   "keywords": [],
   "author": "",
@@ -27,6 +36,7 @@
     "@types/mocha": ">=9.1.0",
     "@types/node": ">=18.0.0",
     "chai": "^4.2.0",
+    "dotenv": "^16.4.7",
     "ethers": "^6.4.0",
     "hardhat": "^2.22.19",
     "hardhat-gas-reporter": "^1.0.8",
