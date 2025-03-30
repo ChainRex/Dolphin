@@ -9,6 +9,20 @@ import { BOT_NFT_ADDRESS, BOT_NFT_ABI } from '../config/web3';
 
 const { Title } = Typography;
 
+// 重试函数
+const retry = async (fn: () => Promise<any>, retries = 3, delay = 1000) => {
+  try {
+    return await fn();
+  } catch (error: any) {
+    if (retries === 0) throw error;
+    if (error.message?.includes('429') || error.message?.includes('rate limit')) {
+      await new Promise(resolve => setTimeout(resolve, delay));
+      return retry(fn, retries - 1, delay * 2);
+    }
+    throw error;
+  }
+};
+
 export const AgentMint: React.FC = () => {
   const {
     agentName,
@@ -32,43 +46,53 @@ export const AgentMint: React.FC = () => {
 
     try {
       setIsLoading(true);
-      showToast("生成地址中...", "info");
-
-      // 模拟生成地址的API调用
-      const address = ethers.Wallet.createRandom().address;
-      console.log("生成的地址:", address);
-      showToast("地址生成成功", "info");
+      showToast("创建Bot中...", "info");
 
       // 创建NFT合约实例
       const contract = new ethers.Contract(BOT_NFT_ADDRESS, BOT_NFT_ABI, signer);
 
-      // 调用合约创建Agent
-      showToast("创建Agent中...", "info");
-      const tx = await contract.createBot(
-        agentName,
-        agentLogo,
-        agentDescription,
-        { value: ethers.utils.parseEther("0.01") } // 支付0.01 ETH
-      );
+      // 使用重试机制调用合约创建Bot
+      const tx = await retry(async () => {
+        return await contract.mintBotNFT(
+          account,           // 接收NFT的地址
+          agentName,         // Bot名称
+          agentDescription,  // Bot描述
+          agentLogo         // Bot图片URL
+        );
+      });
+
+      showToast("等待交易确认...", "info");
 
       // 等待交易确认
       const receipt = await tx.wait();
       console.log("交易确认:", receipt);
 
       // 从事件中获取创建的NFT ID
-      const event = receipt.events?.find(e => e.event === 'BotCreated');
-      const botId = event?.args?.botId;
-      console.log("创建的Bot ID:", botId);
+      const event = receipt.events?.find((e: any) => e.event === 'BotCreated');
+      const tokenId = event?.args?.tokenId;
+      console.log("创建的Bot ID:", tokenId);
 
       showToast(
-        "Agent创建成功!",
+        "Bot创建成功!",
         "success",
         receipt.transactionHash,
-        `https://etherscan.io/token/${BOT_NFT_ADDRESS}?a=${botId}`
+        `https://bscscan.com/token/${BOT_NFT_ADDRESS}?a=${tokenId}`
       );
     } catch (error: any) {
-      console.error("创建Agent失败:", error);
-      showToast(error.message || "创建Agent失败", "error");
+      console.error("创建Bot失败:", error);
+      let errorMessage = "创建Bot失败";
+
+      if (error.message?.includes('429') || error.message?.includes('rate limit')) {
+        errorMessage = "请求过于频繁，请稍后重试";
+      } else if (error.message?.includes('insufficient funds')) {
+        errorMessage = "钱包余额不足";
+      } else if (error.message?.includes('user rejected')) {
+        errorMessage = "交易被用户拒绝";
+      } else if (error.message?.includes('nonce too low')) {
+        errorMessage = "交易序号错误，请刷新页面重试";
+      }
+
+      showToast(errorMessage, "error");
     } finally {
       setIsLoading(false);
     }
@@ -79,7 +103,7 @@ export const AgentMint: React.FC = () => {
     if (!account) {
       return "连接钱包";
     }
-    return isLoading ? <Spin size="small" /> : "创建Agent";
+    return isLoading ? <Spin size="small" /> : "创建Bot";
   };
 
   // 判断按钮是否禁用
@@ -108,31 +132,31 @@ export const AgentMint: React.FC = () => {
     <div style={{ maxWidth: '600px', margin: '0 auto', padding: '20px' }}>
       <Card>
         <Title level={3} style={{ textAlign: 'center', marginBottom: '24px' }}>
-          创建Agent
+          创建Bot
         </Title>
 
         <Form layout="vertical" onFinish={handleButtonClick}>
-          <Form.Item label="Agent名称" required>
+          <Form.Item label="Bot名称" required>
             <Input
-              placeholder="输入Agent名称"
+              placeholder="输入Bot名称"
               value={agentName}
               onChange={(e) => setAgentName(e.target.value)}
               onBlur={(e) => setAgentName(e.target.value.trim())}
             />
           </Form.Item>
 
-          <Form.Item label="Agent Logo URL" required>
+          <Form.Item label="Bot Logo URL" required>
             <Input
-              placeholder="输入Agent Logo URL"
+              placeholder="输入Bot Logo URL"
               value={agentLogo}
               onChange={(e) => setAgentLogo(e.target.value)}
               onBlur={(e) => setAgentLogo(e.target.value.trim())}
             />
           </Form.Item>
 
-          <Form.Item label="Agent描述" required>
+          <Form.Item label="Bot描述" required>
             <Input.TextArea
-              placeholder="输入Agent描述"
+              placeholder="输入Bot描述"
               value={agentDescription}
               onChange={(e) => setAgentDescription(e.target.value)}
               onBlur={(e) => setAgentDescription(e.target.value.trim())}
