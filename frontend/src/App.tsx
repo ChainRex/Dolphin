@@ -1,38 +1,39 @@
-import { ChakraProvider, extendTheme } from '@chakra-ui/react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { CreateBot } from './components/CreateBot';
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { ConfigProvider, Layout, theme } from 'antd';
+import { WalletProvider } from './contexts/WalletContext';
+import { Navigation } from './components/Navigation';
+import { WalletConnect } from './components/WalletConnect';
+import { AgentMint } from './components/AgentMint';
 
-// 创建自定义主题
-const theme = extendTheme({
-  styles: {
-    global: {
-      body: {
-        bg: 'gray.50', // 浅灰色背景
-        color: 'gray.800', // 深灰色文字
-      },
-    },
-  },
-  components: {
-    Container: {
-      baseStyle: {
-        bg: 'white', // 白色背景
-        p: 4,
-        borderRadius: 'md',
-        boxShadow: 'sm',
-      },
-    },
-  },
-});
+const { Content } = Layout;
 
 function App() {
   return (
-    <ChakraProvider theme={theme}>
-      <Router>
-        <Routes>
-          <Route path="/create-bot" element={<CreateBot />} />
-        </Routes>
-      </Router>
-    </ChakraProvider>
+    <ConfigProvider
+      theme={{
+        algorithm: theme.defaultAlgorithm,
+        token: {
+          colorPrimary: '#1890ff',
+        },
+      }}
+    >
+      <WalletProvider>
+        <Router>
+          <Layout style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+            <Navigation />
+            <Content style={{ flex: 1, padding: '24px 50px' }}>
+              <Routes>
+                <Route path="/create-agent" element={<AgentMint />} />
+                <Route path="/wallet" element={<WalletConnect />} />
+                <Route path="/other-page" element={<div>其他页面内容</div>} />
+                <Route path="/" element={<Navigate to="/create-agent" replace />} />
+              </Routes>
+            </Content>
+          </Layout>
+        </Router>
+      </WalletProvider>
+    </ConfigProvider>
   );
 }
 
